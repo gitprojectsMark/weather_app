@@ -1,28 +1,22 @@
-from dotenv import load_dotenv
-from pprint import pprint
-import requests
 import os
+import requests
+from dotenv import load_dotenv
 
 load_dotenv()
 
 def get_current_weather(city="Yerevan"):
-    request_url = f'https://api.openweathermap.org/data/2.5/weather?appid={os.getenv("API_KEY")}&q={city}&units=metric'
+    api_key = os.getenv("API_KEY")
+    if not api_key:
+        raise ValueError("API key is not set in environment variables")
 
-    weather_data = requests.get(request_url).json()
+    request_url = f'https://api.openweathermap.org/data/2.5/weather?appid={api_key}&q={city}&units=metric'
 
-    return weather_data
-
-if __name__ == "__main__":
-    print('\n*** Get Current Weather Conditions ***\n')
-
-    city = input("\nPlease enter a city name: ")
-
-    #Check for empty strings or string with only spaces
-    if not bool(city.strip()):
-        city = "Yerevan" 
-
-    weather_data = get_current_weather(city)
-
-    print("\n")
-
-    pprint(weather_data)
+    try:
+        response = requests.get(request_url)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.HTTPError as http_err:
+        print(f"HTTP error occurred: {http_err}")
+    except Exception as err:
+        print(f"An error occurred: {err}")
+    return None
